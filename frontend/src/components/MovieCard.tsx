@@ -27,6 +27,8 @@ export default function MovieCard({ movie, compact = false, action, quickAdd = f
             <img
               src={poster}
               alt={movie.title}
+              width={500}
+              height={750}
               className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               loading="lazy"
             />

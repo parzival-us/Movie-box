@@ -40,6 +40,7 @@ class Rating(Base):
 
 class Review(Base):
     __tablename__ = "reviews"
+    __table_args__ = (UniqueConstraint("user_id", "movie_id", name="uq_review_user_movie"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)

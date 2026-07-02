@@ -1,6 +1,6 @@
 type StarRatingProps = {
   value?: number | null
-  onChange?: (value: number) => void
+  onChange?: (value: number | null) => void
   size?: "sm" | "md" | "lg"
   readOnly?: boolean
 }
@@ -13,8 +13,17 @@ const sizeClass = {
 
 export default function StarRating({ value = 0, onChange, size = "md", readOnly = false }: StarRatingProps) {
   const rating = value ?? 0
+
+  function handleClick(newValue: number) {
+    if (rating === newValue) {
+      onChange?.(null)
+    } else {
+      onChange?.(newValue)
+    }
+  }
+
   return (
-    <div className="flex items-center gap-1" aria-label={`${rating} out of 5 stars`}>
+    <div className="flex items-center gap-1" role="group" aria-label={`Rating: ${rating} out of 5 stars`}>
       {Array.from({ length: 5 }).map((_, index) => {
         const starNumber = index + 1
         const fillPercent = Math.max(0, Math.min(1, rating - index)) * 100
@@ -28,15 +37,15 @@ export default function StarRating({ value = 0, onChange, size = "md", readOnly 
               <>
                 <button
                   type="button"
-                  className="absolute left-0 top-0 h-full w-1/2"
+                  className="absolute left-0 top-0 h-full w-1/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-mint focus-visible:ring-offset-1 focus-visible:ring-offset-ink rounded-sm"
                   aria-label={`Rate ${index + 0.5} stars`}
-                  onClick={() => onChange?.(index + 0.5)}
+                  onClick={() => handleClick(index + 0.5)}
                 />
                 <button
                   type="button"
-                  className="absolute right-0 top-0 h-full w-1/2"
+                  className="absolute right-0 top-0 h-full w-1/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-mint focus-visible:ring-offset-1 focus-visible:ring-offset-ink rounded-sm"
                   aria-label={`Rate ${starNumber} stars`}
-                  onClick={() => onChange?.(starNumber)}
+                  onClick={() => handleClick(starNumber)}
                 />
               </>
             )}

@@ -10,7 +10,8 @@ import type {
   Statistics,
 } from "../types"
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api"
+const rawBase = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api"
+const API_BASE = rawBase.replace(/\/+$/, "")
 
 type QueryValue = string | number | boolean | null | undefined
 
@@ -24,28 +25,38 @@ function withQuery(path: string, params: Record<string, QueryValue> = {}) {
   return query.size ? `${path}?${query}` : path
 }
 
+const REQUEST_TIMEOUT_MS = 30_000
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-    ...init,
-  })
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
-  if (!response.ok) {
-    let message = `Request failed with ${response.status}`
-    try {
-      const error = await response.json()
-      message = typeof error.detail === "string" ? error.detail : message
-    } catch {
-      // Leave the generic message in place.
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+      signal: controller.signal,
+      ...init,
+    })
+
+    if (!response.ok) {
+      let message = `Request failed with ${response.status}`
+      try {
+        const error = await response.json()
+        message = typeof error.detail === "string" ? error.detail : message
+      } catch {
+        // Leave the generic message in place.
+      }
+      throw new Error(message)
     }
-    throw new Error(message)
-  }
 
-  if (response.status === 204) {
-    return undefined as T
-  }
+    if (response.status === 204) {
+      return undefined as unknown as T
+    }
 
-  return response.json() as Promise<T>
+    return response.json() as Promise<T>
+  } finally {
+    window.clearTimeout(timer)
+  }
 }
 
 export const api = {

@@ -1,7 +1,7 @@
 export const yearFromDate = (date?: string) => (date ? date.slice(0, 4) : "TBA")
 
 export const formatRuntime = (minutes?: number | null) => {
-  if (!minutes) return "Runtime TBA"
+  if (minutes === undefined || minutes === null) return "Runtime TBA"
   const hours = Math.floor(minutes / 60)
   const remaining = minutes % 60
   return hours ? `${hours}h ${remaining}m` : `${remaining}m`

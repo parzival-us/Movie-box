@@ -22,13 +22,14 @@ export default function AppLayout() {
             </span>
             <span className="hidden text-lg font-bold tracking-wide sm:block">Movie Box</span>
           </NavLink>
-          <nav className="flex max-w-full gap-1 overflow-x-auto rounded-lg border border-white/10 bg-white/[0.04] p-1">
+          <nav className="flex max-w-full gap-1 overflow-x-auto rounded-lg border border-white/10 bg-white/[0.04] p-1" aria-label="Main navigation">
             {links.map((link) => {
               const Icon = link.icon
               return (
                 <NavLink
                   key={link.to}
                   to={link.to}
+                  end={link.to === "/"}
                   className={({ isActive }) =>
                     [
                       "flex min-w-10 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
@@ -36,6 +37,7 @@ export default function AppLayout() {
                     ].join(" ")
                   }
                   title={link.label}
+                  aria-label={link.label}
                 >
                   <Icon size={17} />
                   <span className="hidden lg:inline">{link.label}</span>

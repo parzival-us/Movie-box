@@ -1,4 +1,4 @@
-import { CalendarPlus, Heart, Pencil, Plus, Trash2 } from "lucide-react"
+import { CalendarPlus, Heart, Pencil, Plus, Trash2, X } from "lucide-react"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
 import { api } from "../api/client"
@@ -23,9 +23,11 @@ export default function MovieDetailsPage() {
   const [editingReview, setEditingReview] = useState<Review | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [mutationError, setMutationError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!id) return
+    if (!id || isNaN(id)) return
     let ignore = false
     setLoading(true)
     setError("")
@@ -66,49 +68,91 @@ export default function MovieDetailsPage() {
   const directors = movie?.credits?.crew.filter((person) => person.job === "Director") ?? []
   const cast = movie?.credits?.cast.slice(0, 12) ?? []
 
-  async function handleRatingChange(value: number) {
-    setRating(value)
-    const saved = await api.ratings.set(id, value)
-    setRating(saved.rating)
+  async function handleRatingChange(value: number | null) {
+    setMutationError("")
+    try {
+      if (value === null) {
+        await api.ratings.remove(id)
+        setRating(null)
+      } else {
+        setRating(value)
+        const saved = await api.ratings.set(id, value)
+        setRating(saved.rating)
+      }
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : "Failed to update rating")
+    }
   }
 
   async function toggleWatchlist() {
-    if (watchlisted) {
-      await api.watchlist.remove(id)
-      setWatchlisted(false)
-    } else {
-      await api.watchlist.add(id)
-      setWatchlisted(true)
+    setMutationError("")
+    try {
+      if (watchlisted) {
+        await api.watchlist.remove(id)
+        setWatchlisted(false)
+      } else {
+        await api.watchlist.add(id)
+        setWatchlisted(true)
+      }
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : "Failed to update watchlist")
     }
   }
 
   async function toggleFavorite() {
-    if (favorited) {
-      await api.favorites.remove(id)
-      setFavorited(false)
-    } else {
-      await api.favorites.add(id)
-      setFavorited(true)
+    setMutationError("")
+    try {
+      if (favorited) {
+        await api.favorites.remove(id)
+        setFavorited(false)
+      } else {
+        await api.favorites.add(id)
+        setFavorited(true)
+      }
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : "Failed to update favorites")
     }
   }
 
   async function submitReview(event: FormEvent) {
     event.preventDefault()
     if (!reviewText.trim()) return
-    if (editingReview) {
-      const updated = await api.reviews.update(editingReview.id, reviewText.trim())
-      setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)))
-      setEditingReview(null)
-    } else {
-      const created = await api.reviews.create(id, reviewText.trim())
-      setReviews((current) => [created, ...current])
+    setMutationError("")
+    setSubmitting(true)
+    try {
+      if (editingReview) {
+        const updated = await api.reviews.update(editingReview.id, reviewText.trim())
+        setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)))
+        setEditingReview(null)
+      } else {
+        const created = await api.reviews.create(id, reviewText.trim())
+        setReviews((current) => [created, ...current])
+      }
+      setReviewText("")
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : "Failed to save review")
+    } finally {
+      setSubmitting(false)
     }
-    setReviewText("")
   }
 
   async function deleteReview(reviewId: number) {
-    await api.reviews.remove(reviewId)
-    setReviews((current) => current.filter((review) => review.id !== reviewId))
+    if (!window.confirm("Delete this review?")) return
+    setMutationError("")
+    try {
+      await api.reviews.remove(reviewId)
+      setReviews((current) => current.filter((review) => review.id !== reviewId))
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : "Failed to delete review")
+    }
+  }
+
+  if (!id || isNaN(id)) {
+    return (
+      <main className="page-shell animate-fade">
+        <ErrorBanner message="Invalid movie ID." />
+      </main>
+    )
   }
 
   if (loading) {
@@ -145,7 +189,7 @@ export default function MovieDetailsPage() {
         <div className="page-shell relative grid gap-8 py-10 lg:grid-cols-[300px_1fr]">
           <div className="overflow-hidden rounded-lg border border-white/10 bg-panel shadow-glow">
             {movie.poster_path ? (
-              <img src={posterUrl(movie.poster_path)} alt={movie.title} className="h-full w-full object-cover" />
+              <img src={posterUrl(movie.poster_path)} alt={movie.title} width={500} height={750} className="h-full w-full object-cover" />
             ) : (
               <MoviePosterFallback title={movie.title} className="aspect-[2/3]" />
             )}
@@ -167,9 +211,17 @@ export default function MovieDetailsPage() {
               {directors.length > 0 && <span>Directed by {directors.map((director) => director.name).join(", ")}</span>}
             </div>
             <p className="mt-6 max-w-3xl text-base leading-7 text-white/75">{movie.overview}</p>
+            {mutationError && <div className="mt-4"><ErrorBanner message={mutationError} /></div>}
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="glass-panel rounded-lg px-4 py-3">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Your rating</p>
+                <div className="mb-1 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Your rating</p>
+                  {rating !== null && (
+                    <button type="button" className="text-xs text-white/45 hover:text-coral" onClick={() => handleRatingChange(null)} aria-label="Clear rating">
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
                 <StarRating value={rating} onChange={handleRatingChange} />
               </div>
               <button type="button" className="secondary-button" onClick={toggleWatchlist}>
@@ -205,8 +257,8 @@ export default function MovieDetailsPage() {
           <section>
             <h2 className="mb-4 text-2xl font-bold text-white">Cast</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {cast.map((person) => (
-                <PersonCard key={`${person.id}-${person.character}`} person={person} />
+              {cast.map((person, index) => (
+                <PersonCard key={`${person.id}-${index}`} person={person} />
               ))}
             </div>
           </section>
@@ -223,13 +275,15 @@ export default function MovieDetailsPage() {
           <section className="glass-panel rounded-lg p-4">
             <h2 className="text-xl font-bold text-white">Review</h2>
             <form className="mt-4 space-y-3" onSubmit={submitReview}>
+              <label htmlFor="review-text" className="sr-only">Write a review</label>
               <textarea
+                id="review-text"
                 className="control min-h-32 w-full resize-y"
                 value={reviewText}
                 placeholder="What stayed with you?"
                 onChange={(event) => setReviewText(event.target.value)}
               />
-              <button className="primary-button w-full" type="submit">
+              <button className="primary-button w-full" type="submit" disabled={submitting || !reviewText.trim()}>
                 {editingReview ? "Save review" : "Post review"}
               </button>
             </form>
@@ -246,6 +300,7 @@ export default function MovieDetailsPage() {
                       type="button"
                       className="icon-button h-8 w-8"
                       title="Edit review"
+                      aria-label="Edit review"
                       onClick={() => {
                         setEditingReview(review)
                         setReviewText(review.content)
@@ -253,7 +308,7 @@ export default function MovieDetailsPage() {
                     >
                       <Pencil size={15} />
                     </button>
-                    <button type="button" className="icon-button h-8 w-8" title="Delete review" onClick={() => deleteReview(review.id)}>
+                    <button type="button" className="icon-button h-8 w-8" title="Delete review" aria-label="Delete review" onClick={() => deleteReview(review.id)}>
                       <Trash2 size={15} />
                     </button>
                   </div>

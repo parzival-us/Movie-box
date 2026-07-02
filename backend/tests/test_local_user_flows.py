@@ -18,7 +18,7 @@ def test_rating_can_be_created_updated_and_deleted(client):
     assert created.json()["rating"] == 4.5
 
     updated = client.post("/api/ratings", json={"movie_id": 11, "rating": 3.5})
-    assert updated.status_code == 201
+    assert updated.status_code == 200
     assert updated.json()["rating"] == 3.5
 
     listed = client.get("/api/ratings")
@@ -94,7 +94,7 @@ def test_diary_entries_drive_statistics(client):
     stats = client.get("/api/statistics")
     assert stats.status_code == 200
     body = stats.json()
-    assert body["total_movies_watched"] == 2
+    assert body["total_watches"] == 2
     assert body["total_runtime"] == 273
     assert body["average_rating"] == 4.75
     assert {"name": "Drama", "count": 1} in body["favorite_genres"]

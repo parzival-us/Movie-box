@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -27,18 +27,21 @@ def get_rating(
     return db.scalar(select(Rating).where(Rating.user_id == user_id, Rating.movie_id == movie_id))
 
 
-@router.post("", response_model=RatingOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=RatingOut)
 def upsert_rating(
     payload: RatingCreate,
+    response: Response,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> Rating:
     rating = db.scalar(select(Rating).where(Rating.user_id == user_id, Rating.movie_id == payload.movie_id))
     if rating:
         rating.rating = payload.rating
+        response.status_code = status.HTTP_200_OK
     else:
         rating = Rating(user_id=user_id, movie_id=payload.movie_id, rating=payload.rating)
         db.add(rating)
+        response.status_code = status.HTTP_201_CREATED
     db.commit()
     db.refresh(rating)
     return rating

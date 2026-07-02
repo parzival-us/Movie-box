@@ -18,6 +18,7 @@ export default function DiaryPage() {
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     let ignore = false
@@ -40,21 +41,34 @@ export default function DiaryPage() {
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (!selectedMovie) return
-    const created = await api.diary.create({
-      movie_id: selectedMovie.id,
-      watch_date: watchDate,
-      rating,
-      notes: notes.trim() || undefined,
-    })
-    setEntries((current) => [created, ...current])
-    setSelectedMovie(null)
-    setRating(null)
-    setNotes("")
+    setSubmitting(true)
+    setError("")
+    try {
+      const created = await api.diary.create({
+        movie_id: selectedMovie.id,
+        watch_date: watchDate,
+        rating,
+        notes: notes.trim() || undefined,
+      })
+      setEntries((current) => [created, ...current])
+      setSelectedMovie(null)
+      setRating(null)
+      setNotes("")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add diary entry")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function remove(entryId: number) {
-    await api.diary.remove(entryId)
-    setEntries((current) => current.filter((entry) => entry.id !== entryId))
+    if (!window.confirm("Delete this diary entry?")) return
+    try {
+      await api.diary.remove(entryId)
+      setEntries((current) => current.filter((entry) => entry.id !== entryId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete entry")
+    }
   }
 
   return (
@@ -71,19 +85,19 @@ export default function DiaryPage() {
           <div className="mt-4 space-y-4">
             <MoviePicker selected={selectedMovie} onSelect={setSelectedMovie} />
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white/75">Watch date</label>
-              <input className="control w-full" type="date" value={watchDate} onChange={(event) => setWatchDate(event.target.value)} />
+              <label htmlFor="diary-date" className="mb-2 block text-sm font-semibold text-white/75">Watch date</label>
+              <input id="diary-date" className="control w-full" type="date" value={watchDate} onChange={(event) => setWatchDate(event.target.value)} />
             </div>
             <div>
               <label className="mb-2 block text-sm font-semibold text-white/75">Personal rating</label>
               <StarRating value={rating} onChange={setRating} />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white/75">Notes</label>
-              <textarea className="control min-h-28 w-full resize-y" value={notes} onChange={(event) => setNotes(event.target.value)} />
+              <label htmlFor="diary-notes" className="mb-2 block text-sm font-semibold text-white/75">Notes</label>
+              <textarea id="diary-notes" className="control min-h-28 w-full resize-y" value={notes} onChange={(event) => setNotes(event.target.value)} />
             </div>
-            <button className="primary-button w-full" disabled={!selectedMovie} type="submit">
-              Add diary entry
+            <button className="primary-button w-full" disabled={!selectedMovie || submitting} type="submit">
+              {submitting ? "Adding..." : "Add diary entry"}
             </button>
           </div>
         </form>
@@ -107,7 +121,7 @@ function DiaryRow({ entry, onRemove }: { entry: DiaryEntry; onRemove: () => void
     <article className="glass-panel grid gap-4 rounded-lg p-3 sm:grid-cols-[84px_1fr_auto]">
       <div className="aspect-[2/3] overflow-hidden rounded-lg bg-panel">
         {entry.movie?.poster_path ? (
-          <img src={posterUrl(entry.movie.poster_path, "w185")} alt={entry.movie.title} className="h-full w-full object-cover" />
+          <img src={posterUrl(entry.movie.poster_path, "w185")} alt={entry.movie.title} width={185} height={278} className="h-full w-full object-cover" />
         ) : (
           <MoviePosterFallback title={entry.movie?.title} />
         )}
@@ -120,7 +134,7 @@ function DiaryRow({ entry, onRemove }: { entry: DiaryEntry; onRemove: () => void
         </div>
         {entry.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/70">{entry.notes}</p>}
       </div>
-      <button className="icon-button self-start" type="button" title="Delete entry" onClick={onRemove}>
+      <button className="icon-button self-start" type="button" title="Delete entry" aria-label="Delete diary entry" onClick={onRemove}>
         <Trash2 size={17} />
       </button>
     </article>

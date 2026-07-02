@@ -52,9 +52,12 @@ async def update_diary_entry(
     entry = db.get(DiaryEntry, entry_id)
     if not entry or entry.user_id != user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Diary entry not found.")
-    update = payload.model_dump(exclude_unset=True)
-    for key, value in update.items():
-        setattr(entry, key, value)
+    if payload.watch_date is not None:
+        entry.watch_date = payload.watch_date
+    if payload.notes is not None:
+        entry.notes = payload.notes
+    if payload.has_rating_update():
+        entry.rating = payload.resolved_rating()
     db.commit()
     db.refresh(entry)
     movies = await movie_map([entry.movie_id], tmdb_client)

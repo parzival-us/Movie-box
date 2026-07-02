@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { api } from "../api/client"
 import ErrorBanner from "../components/ErrorBanner"
@@ -23,6 +23,12 @@ export default function SearchPage() {
   const [error, setError] = useState("")
   const sentinel = useRef<HTMLDivElement | null>(null)
   const debouncedQuery = useDebouncedValue(query)
+  const pageRef = useRef(page)
+  const loadingMoreRef = useRef(loadingMore)
+  const totalPagesRef = useRef(totalPages)
+  pageRef.current = page
+  loadingMoreRef.current = loadingMore
+  totalPagesRef.current = totalPages
 
   useEffect(() => {
     api.movies.genres().then(setGenres).catch(() => setGenres([]))
@@ -52,27 +58,30 @@ export default function SearchPage() {
     }
   }, [debouncedQuery, genre, minRating, sortBy, year])
 
+  const loadMore = useCallback(() => {
+    if (loading || loadingMoreRef.current || pageRef.current >= totalPagesRef.current) return
+    const nextPage = pageRef.current + 1
+    setLoadingMore(true)
+    api.movies
+      .search({ query: debouncedQuery, page: nextPage, year, genre, min_rating: minRating, sort_by: sortBy })
+      .then((result) => {
+        setMovies((current) => [...current, ...result.results])
+        setPage(nextPage)
+        setTotalPages(result.total_pages)
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoadingMore(false))
+  }, [debouncedQuery, genre, loading, minRating, sortBy, year])
+
   useEffect(() => {
     const node = sentinel.current
     if (!node) return
     const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries
-      if (!entry.isIntersecting || loading || loadingMore || page >= totalPages) return
-      const nextPage = page + 1
-      setLoadingMore(true)
-      api.movies
-        .search({ query: debouncedQuery, page: nextPage, year, genre, min_rating: minRating, sort_by: sortBy })
-        .then((result) => {
-          setMovies((current) => [...current, ...result.results])
-          setPage(nextPage)
-          setTotalPages(result.total_pages)
-        })
-        .catch((err: Error) => setError(err.message))
-        .finally(() => setLoadingMore(false))
+      if (entries[0].isIntersecting) loadMore()
     })
     observer.observe(node)
     return () => observer.disconnect()
-  }, [debouncedQuery, genre, loading, loadingMore, minRating, page, sortBy, totalPages, year])
+  }, [loadMore])
 
   return (
     <main className="page-shell animate-fade">
@@ -83,29 +92,44 @@ export default function SearchPage() {
 
       <div className="glass-panel mb-6 rounded-lg p-4">
         <div className="grid gap-3 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
-          <input className="control" placeholder="Search by title" value={query} onChange={(event) => setQuery(event.target.value)} />
-          <select className="control" value={genre} onChange={(event) => setGenre(event.target.value)}>
-            <option value="">All genres</option>
-            {genres.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          <input className="control" placeholder="Year" value={year} onChange={(event) => setYear(event.target.value)} />
-          <select className="control" value={minRating} onChange={(event) => setMinRating(event.target.value)}>
-            <option value="">Any rating</option>
-            <option value="6">6.0+</option>
-            <option value="7">7.0+</option>
-            <option value="8">8.0+</option>
-          </select>
-          <select className="control" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-            <option value="popularity.desc">Popular</option>
-            <option value="vote_average.desc">Top rated</option>
-            <option value="primary_release_date.desc">Newest</option>
-            <option value="primary_release_date.asc">Oldest</option>
-            <option value="title.asc">Title</option>
-          </select>
+          <div>
+            <label htmlFor="search-query" className="sr-only">Search by title</label>
+            <input id="search-query" className="control w-full" placeholder="Search by title" value={query} onChange={(event) => setQuery(event.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="search-genre" className="sr-only">Genre</label>
+            <select id="search-genre" className="control w-full" value={genre} onChange={(event) => setGenre(event.target.value)}>
+              <option value="">All genres</option>
+              {genres.map((item) => (
+                <option key={item.id} value={String(item.id)}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="search-year" className="sr-only">Year</label>
+            <input id="search-year" className="control w-full" placeholder="Year" value={year} onChange={(event) => setYear(event.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="search-rating" className="sr-only">Minimum rating</label>
+            <select id="search-rating" className="control w-full" value={minRating} onChange={(event) => setMinRating(event.target.value)}>
+              <option value="">Any rating</option>
+              <option value="6">6.0+</option>
+              <option value="7">7.0+</option>
+              <option value="8">8.0+</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="search-sort" className="sr-only">Sort by</label>
+            <select id="search-sort" className="control w-full" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="popularity.desc">Popular</option>
+              <option value="vote_average.desc">Top rated</option>
+              <option value="primary_release_date.desc">Newest</option>
+              <option value="primary_release_date.asc">Oldest</option>
+              <option value="title.asc">Title</option>
+            </select>
+          </div>
         </div>
       </div>
 

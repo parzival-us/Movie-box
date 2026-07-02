@@ -71,10 +71,23 @@ class DiaryCreate(BaseModel):
     notes: str | None = Field(default=None, max_length=8000)
 
 
+_UNSET = object()
+
+
 class DiaryUpdate(BaseModel):
     watch_date: date | None = None
-    rating: float | None = Field(default=None, ge=0.5, le=5)
+    rating: float | None = _UNSET  # type: ignore[assignment]
     notes: str | None = Field(default=None, max_length=8000)
+
+    def has_rating_update(self) -> bool:
+        return self.rating is not _UNSET
+
+    def resolved_rating(self) -> float | None:
+        if self.rating is _UNSET:
+            return None
+        if self.rating is not None and not (0.5 <= self.rating <= 5):
+            raise ValueError("Rating must be between 0.5 and 5.")
+        return self.rating
 
 
 class DiaryOut(ORMModel):
@@ -130,13 +143,8 @@ class StatusOut(BaseModel):
     exists: bool
 
 
-class StatisticCard(BaseModel):
-    label: str
-    value: str | int | float
-
-
 class StatisticsOut(BaseModel):
-    total_movies_watched: int
+    total_watches: int
     total_runtime: int
     average_rating: float | None
     favorite_genres: list[dict[str, Any]]

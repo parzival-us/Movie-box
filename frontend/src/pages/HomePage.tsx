@@ -22,16 +22,26 @@ export default function HomePage() {
   useEffect(() => {
     let ignore = false
     setLoading(true)
-    Promise.all([api.movies.trending(), api.movies.popular(), api.movies.topRated(), api.movies.upcoming()])
-      .then(([trending, popular, topRated, upcoming]) => {
-        if (!ignore) setHome({ trending, popular, topRated, upcoming })
-      })
-      .catch((err: Error) => {
-        if (!ignore) setError(err.message)
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false)
-      })
+    Promise.allSettled([
+      api.movies.trending(),
+      api.movies.popular(),
+      api.movies.topRated(),
+      api.movies.upcoming(),
+    ]).then(([trending, popular, topRated, upcoming]) => {
+      if (ignore) return
+      const state: HomeState = {}
+      if (trending.status === "fulfilled") state.trending = trending.value
+      if (popular.status === "fulfilled") state.popular = popular.value
+      if (topRated.status === "fulfilled") state.topRated = topRated.value
+      if (upcoming.status === "fulfilled") state.upcoming = upcoming.value
+      setHome(state)
+      const allFailed = [trending, popular, topRated, upcoming].every((r) => r.status === "rejected")
+      if (allFailed) {
+        const reason = trending.status === "rejected" ? trending.reason : undefined
+        setError(reason instanceof Error ? reason.message : "Failed to load movies.")
+      }
+      setLoading(false)
+    })
     return () => {
       ignore = true
     }
@@ -56,7 +66,7 @@ export default function HomePage() {
 function Hero({ movie, loading }: { movie?: MovieSummary; loading: boolean }) {
   const backdrop = backdropUrl(movie?.backdrop_path)
   return (
-    <section className="relative min-h-[58vh] overflow-hidden border-b border-white/10">
+    <section className="relative min-h-[58vh] overflow-hidden border-b border-white/10" aria-label="Featured movie">
       {backdrop ? (
         <img src={backdrop} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
       ) : (
@@ -99,7 +109,7 @@ function Hero({ movie, loading }: { movie?: MovieSummary; loading: boolean }) {
               to={`/movies/${movie.id}`}
               className="hidden aspect-[2/3] overflow-hidden rounded-lg border border-white/15 bg-white/10 shadow-glow md:block"
             >
-              <img src={posterUrl(movie.poster_path)} alt={movie.title} className="h-full w-full object-cover" />
+              <img src={posterUrl(movie.poster_path)} alt={movie.title} width={500} height={750} className="h-full w-full object-cover" />
             </Link>
           )}
         </div>

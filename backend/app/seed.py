@@ -4,8 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
-from app.main import seed_local_user
-from app.models import DiaryEntry, Favorite, ListMovie, MovieList, Rating, Review, WatchlistItem
+from app.models import DiaryEntry, Favorite, ListMovie, MovieList, Rating, Review, User, WatchlistItem
 
 
 LOCAL_USER_ID = 1
@@ -20,11 +19,18 @@ WATCHLIST_MOVIES = [550, 680, 27205, 603]
 FAVORITE_MOVIES = [11, 155]
 
 
+def _seed_local_user(db: Session) -> None:
+    user = db.scalar(select(User).where(User.id == 1))
+    if not user:
+        db.add(User(id=1, username="local"))
+        db.flush()
+
+
 def seed_demo_data() -> None:
     Base.metadata.create_all(bind=engine)
-    seed_local_user()
     db = SessionLocal()
     try:
+        _seed_local_user(db)
         _seed_ratings(db)
         _seed_reviews(db)
         _seed_diary(db)
@@ -32,6 +38,9 @@ def seed_demo_data() -> None:
         _seed_favorites(db)
         _seed_list(db)
         db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

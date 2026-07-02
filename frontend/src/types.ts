@@ -34,7 +34,6 @@ export type Video = {
 }
 
 export type MovieDetails = MovieSummary & {
-  runtime?: number
   tagline?: string
   genres: Genre[]
   credits?: {
@@ -107,7 +106,7 @@ export type ListMovie = {
 }
 
 export type Statistics = {
-  total_movies_watched: number
+  total_watches: number
   total_runtime: number
   average_rating: number | null
   favorite_genres: { name: string; count: number }[]

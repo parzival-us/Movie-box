@@ -3,6 +3,7 @@ import tempfile
 from collections.abc import Generator
 
 import pytest
+from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 test_db_path = os.path.join(tempfile.gettempdir(), "movie_box_test.db")
@@ -52,9 +53,13 @@ class FakeTMDBClient:
     }
 
     async def movie_summary(self, movie_id: int) -> dict:
+        if movie_id not in self.movies:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found.")
         return self.movies[movie_id]
 
     async def movie_details(self, movie_id: int) -> dict:
+        if movie_id not in self.movies:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found.")
         return self.movies[movie_id]
 
 

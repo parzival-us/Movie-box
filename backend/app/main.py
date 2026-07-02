@@ -10,13 +10,16 @@ from app.api.routers import diary, favorites, lists, movies, ratings, reviews, s
 from app.core.config import get_settings
 from app.database import Base, SessionLocal, engine
 from app.models import User
+from app.services.tmdb import tmdb_client
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     Base.metadata.create_all(bind=engine)
     seed_local_user()
+    await tmdb_client.start()
     yield
+    await tmdb_client.close()
 
 
 def create_app() -> FastAPI:
@@ -25,10 +28,14 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_origin, "http://127.0.0.1:5173", "http://localhost:5174"],
+        allow_origins=[
+            settings.frontend_origin,
+            "http://127.0.0.1:5173",
+            "http://localhost:5174",
+        ],
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
     )
 
     app.include_router(movies.router, prefix="/api")
@@ -54,6 +61,9 @@ def seed_local_user() -> None:
         if not user:
             db.add(User(id=1, username="local"))
             db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

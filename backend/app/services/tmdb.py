@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+import time
 from typing import Any
 
 import httpx
@@ -7,11 +9,38 @@ from fastapi import HTTPException, status
 
 from app.core.config import get_settings
 
+_CACHE: dict[str, tuple[float, Any]] = {}
+_CACHE_TTL = 300  # seconds
+
+
+def _cache_get(key: str) -> Any | None:
+    entry = _CACHE.get(key)
+    if entry and time.monotonic() - entry[0] < _CACHE_TTL:
+        return entry[1]
+    _CACHE.pop(key, None)
+    return None
+
+
+def _cache_set(key: str, value: Any) -> None:
+    _CACHE[key] = (time.monotonic(), value)
+
+
+VALID_COLLECTIONS = {"trending", "popular", "top_rated", "upcoming"}
+
 
 class TMDBClient:
     def __init__(self) -> None:
         self.settings = get_settings()
         self.base_url = self.settings.tmdb_base_url.rstrip("/")
+        self._client: httpx.AsyncClient | None = None
+
+    async def start(self) -> None:
+        self._client = httpx.AsyncClient(timeout=20)
+
+    async def close(self) -> None:
+        if self._client:
+            await self._client.aclose()
+            self._client = None
 
     @property
     def configured(self) -> bool:
@@ -33,10 +62,22 @@ class TMDBClient:
                 detail="TMDB credentials are not configured. Add TMDB_BEARER_TOKEN or TMDB_API_KEY to backend/.env.",
             )
 
+        cache_key = f"{path}:{params}"
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         headers, request_params = self._auth_params(params)
         url = f"{self.base_url}/{path.lstrip('/')}"
-        async with httpx.AsyncClient(timeout=20) as client:
+
+        try:
+            client = self._client or httpx.AsyncClient(timeout=20)
             response = await client.get(url, headers=headers, params=request_params)
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Could not reach TMDB: {exc}",
+            ) from exc
 
         if response.status_code == 401:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TMDB credentials were rejected.")
@@ -47,9 +88,17 @@ class TMDBClient:
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"TMDB request failed with status {response.status_code}.",
             )
-        return response.json()
+
+        data = response.json()
+        _cache_set(cache_key, data)
+        return data
 
     async def movie_collection(self, collection: str, page: int = 1) -> dict[str, Any]:
+        if collection not in VALID_COLLECTIONS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown collection '{collection}'. Valid: {', '.join(sorted(VALID_COLLECTIONS))}.",
+            )
         paths = {
             "trending": "trending/movie/week",
             "popular": "movie/popular",
@@ -118,18 +167,20 @@ class TMDBClient:
         if min_rating is not None:
             results = [movie for movie in results if float(movie.get("vote_average") or 0) >= min_rating]
 
-        reverse = True
         key_name = sort_by or ""
         if key_name == "vote_average.desc":
             results.sort(key=lambda item: item.get("vote_average") or 0, reverse=True)
         elif key_name == "primary_release_date.desc":
-            results.sort(key=lambda item: item.get("release_date") or "", reverse=reverse)
+            results.sort(key=lambda item: item.get("release_date") or "", reverse=True)
         elif key_name == "primary_release_date.asc":
             results.sort(key=lambda item: item.get("release_date") or "")
         elif key_name == "title.asc":
             results.sort(key=lambda item: item.get("title") or "")
+
+        page_size = max(len(data.get("results", [])), 1)
         data["results"] = results
         data["total_results"] = len(results)
+        data["total_pages"] = math.ceil(len(results) / page_size) if results else 0
         return data
 
 

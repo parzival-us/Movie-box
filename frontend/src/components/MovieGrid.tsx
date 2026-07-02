@@ -9,9 +9,10 @@ type MovieGridProps = {
   emptyTitle?: string
   emptyMessage?: string
   quickAdd?: boolean
+  action?: (movie: MovieSummary) => React.ReactNode
 }
 
-export default function MovieGrid({ movies, loading, emptyTitle, emptyMessage, quickAdd = true }: MovieGridProps) {
+export default function MovieGrid({ movies, loading, emptyTitle, emptyMessage, quickAdd = true, action }: MovieGridProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -29,7 +30,7 @@ export default function MovieGrid({ movies, loading, emptyTitle, emptyMessage, q
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} quickAdd={quickAdd} />
+        <MovieCard key={movie.id} movie={movie} quickAdd={!action && quickAdd} action={action ? action(movie) : undefined} />
       ))}
     </div>
   )
