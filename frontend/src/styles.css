@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  background: #07090d;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 9, 13, 0.7), #07090d 360px),
+    linear-gradient(135deg, #0b1118 0%, #07090d 45%, #0d1218 100%);
+  color: #edf3f7;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(64, 217, 164, 0.35);
+}
+
+@layer components {
+  .glass-panel {
+    @apply border border-white/10 bg-white/[0.06] shadow-glow backdrop-blur-xl;
+  }
+
+  .page-shell {
+    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
+  }
+
+  .control {
+    @apply rounded-lg border border-white/10 bg-white/[0.07] px-3 py-2 text-sm text-white outline-none transition focus:border-mint/60 focus:ring-2 focus:ring-mint/20;
+  }
+
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.07] text-white transition hover:border-mint/50 hover:bg-mint/10;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-mint px-4 py-2 text-sm font-semibold text-ink transition hover:bg-mint/90 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.07] px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.11] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
