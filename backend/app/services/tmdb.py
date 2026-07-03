@@ -8,6 +8,12 @@ import httpx
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
+from app.services.demo_movies import (
+    DEMO_GENRES,
+    get_demo_movie,
+    get_demo_movies_page,
+    search_demo_movies,
+)
 
 _CACHE: dict[str, tuple[float, Any]] = {}
 _CACHE_TTL = 300  # seconds
@@ -59,7 +65,7 @@ class TMDBClient:
         if not self.configured:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="TMDB credentials are not configured. Add TMDB_BEARER_TOKEN or TMDB_API_KEY to backend/.env.",
+                detail="TMDB credentials are not configured.",
             )
 
         cache_key = f"{path}:{params}"
@@ -93,12 +99,16 @@ class TMDBClient:
         _cache_set(cache_key, data)
         return data
 
+    # ── Public API methods with demo fallback ──
+
     async def movie_collection(self, collection: str, page: int = 1) -> dict[str, Any]:
         if collection not in VALID_COLLECTIONS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Unknown collection '{collection}'. Valid: {', '.join(sorted(VALID_COLLECTIONS))}.",
             )
+        if not self.configured:
+            return get_demo_movies_page(collection, page)
         paths = {
             "trending": "trending/movie/week",
             "popular": "movie/popular",
@@ -108,6 +118,8 @@ class TMDBClient:
         return await self.request(paths[collection], {"language": "en-US", "page": page})
 
     async def genres(self) -> dict[str, Any]:
+        if not self.configured:
+            return {"genres": DEMO_GENRES}
         return await self.request("genre/movie/list", {"language": "en-US"})
 
     async def search_movies(
@@ -119,6 +131,18 @@ class TMDBClient:
         min_rating: float | None = None,
         sort_by: str | None = None,
     ) -> dict[str, Any]:
+        if not self.configured:
+            results = search_demo_movies(query, genre, min_rating, sort_by)
+            page_size = 20
+            start = (page - 1) * page_size
+            paged = results[start : start + page_size]
+            return {
+                "page": page,
+                "results": paged,
+                "total_pages": math.ceil(len(results) / page_size) if results else 0,
+                "total_results": len(results),
+            }
+
         params: dict[str, Any] = {
             "language": "en-US",
             "include_adult": "false",
@@ -142,6 +166,11 @@ class TMDBClient:
         return await self.request("discover/movie", params)
 
     async def movie_details(self, movie_id: int) -> dict[str, Any]:
+        if not self.configured:
+            movie = get_demo_movie(movie_id)
+            if not movie:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found.")
+            return movie
         return await self.request(
             f"movie/{movie_id}",
             {
@@ -151,6 +180,11 @@ class TMDBClient:
         )
 
     async def movie_summary(self, movie_id: int) -> dict[str, Any]:
+        if not self.configured:
+            movie = get_demo_movie(movie_id)
+            if not movie:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found.")
+            return movie
         return await self.request(f"movie/{movie_id}", {"language": "en-US"})
 
     @staticmethod
