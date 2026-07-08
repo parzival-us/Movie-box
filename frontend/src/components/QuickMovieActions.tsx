@@ -49,7 +49,7 @@ export default function QuickMovieActions({ movie }: QuickMovieActionsProps) {
         disabled={pending === "watchlist"}
         onClick={addToWatchlist}
       >
-        <BookmarkPlus size={14} className={watchlisted ? "text-mint" : ""} />
+        <BookmarkPlus size={14} className={watchlisted ? "text-white" : ""} />
       </button>
       <button
         className="icon-button h-8 w-8"

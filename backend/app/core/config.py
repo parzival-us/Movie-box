@@ -16,3 +16,8 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def clear_settings_cache() -> None:
+    """Call on startup to pick up .env changes after a reload."""
+    get_settings.cache_clear()

@@ -7,14 +7,14 @@ export default {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
-        ink: "#07090d",
-        panel: "#10151f",
-        ember: "#f7b955",
-        mint: "#40d9a4",
-        coral: "#ff6f61",
+        ink: "#000000",
+        panel: "#0a0a0a",
+        ember: "#a0a0a0",
+        mint: "#ffffff",
+        coral: "#ff4444",
       },
       boxShadow: {
-        glow: "0 24px 80px rgba(64, 217, 164, 0.12)",
+        glow: "0 24px 80px rgba(255, 255, 255, 0.06)",
       },
       keyframes: {
         fadeIn: {

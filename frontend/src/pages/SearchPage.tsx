@@ -86,7 +86,7 @@ export default function SearchPage() {
   return (
     <main className="page-shell animate-fade">
       <div className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-mint">Explore</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/40">Explore</p>
         <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">Search movies</h1>
       </div>
 

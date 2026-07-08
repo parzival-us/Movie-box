@@ -18,7 +18,7 @@ export default function SectionShelf({ title, movies = [], to, loading, quickAdd
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2 className="text-xl font-bold text-white">{title}</h2>
         {to && (
-          <Link to={to} className="flex items-center gap-1 text-sm font-semibold text-mint hover:text-mint/80">
+          <Link to={to} className="flex items-center gap-1 text-sm font-semibold text-white/50 hover:text-white">
             View all
             <ChevronRight size={16} />
           </Link>

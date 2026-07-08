@@ -70,7 +70,7 @@ function Hero({ movie, loading }: { movie?: MovieSummary; loading: boolean }) {
       {backdrop ? (
         <img src={backdrop} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
       ) : (
-        <div className="absolute inset-0 bg-[linear-gradient(130deg,#111827,#07090d_55%,#10231d)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(130deg,#111111,#000000_55%,#0a0a0a)]" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/25" />
       <div className="page-shell relative flex min-h-[58vh] items-end pb-10">

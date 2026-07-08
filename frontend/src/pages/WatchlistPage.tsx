@@ -46,7 +46,7 @@ export default function WatchlistPage() {
     <main className="page-shell animate-fade">
       <div className="mb-6 flex items-end justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-mint">To watch</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/40">To watch</p>
           <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">Watchlist</h1>
         </div>
         <div>

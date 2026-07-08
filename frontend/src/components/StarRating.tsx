@@ -29,21 +29,21 @@ export default function StarRating({ value = 0, onChange, size = "md", readOnly 
         const fillPercent = Math.max(0, Math.min(1, rating - index)) * 100
         return (
           <span key={starNumber} className={`relative inline-flex leading-none ${sizeClass[size]}`}>
-            <span className="text-white/20">★</span>
-            <span className="absolute left-0 top-0 overflow-hidden text-ember" style={{ width: `${fillPercent}%` }}>
+            <span className="text-white/15">★</span>
+            <span className="absolute left-0 top-0 overflow-hidden text-white" style={{ width: `${fillPercent}%` }}>
               ★
             </span>
             {!readOnly && (
               <>
                 <button
                   type="button"
-                  className="absolute left-0 top-0 h-full w-1/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-mint focus-visible:ring-offset-1 focus-visible:ring-offset-ink rounded-sm"
+                  className="absolute left-0 top-0 h-full w-1/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-1 focus-visible:ring-offset-black rounded-sm"
                   aria-label={`Rate ${index + 0.5} stars`}
                   onClick={() => handleClick(index + 0.5)}
                 />
                 <button
                   type="button"
-                  className="absolute right-0 top-0 h-full w-1/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-mint focus-visible:ring-offset-1 focus-visible:ring-offset-ink rounded-sm"
+                  className="absolute right-0 top-0 h-full w-1/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-1 focus-visible:ring-offset-black rounded-sm"
                   aria-label={`Rate ${starNumber} stars`}
                   onClick={() => handleClick(starNumber)}
                 />

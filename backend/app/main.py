@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.routers import diary, favorites, lists, movies, ratings, reviews, statistics, watchlist
-from app.core.config import get_settings
+from app.core.config import clear_settings_cache, get_settings
 from app.database import Base, SessionLocal, engine
 from app.models import User
 from app.services.tmdb import tmdb_client
@@ -15,6 +15,7 @@ from app.services.tmdb import tmdb_client
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    clear_settings_cache()
     Base.metadata.create_all(bind=engine)
     seed_local_user()
     await tmdb_client.start()

@@ -36,9 +36,15 @@ VALID_COLLECTIONS = {"trending", "popular", "top_rated", "upcoming"}
 
 class TMDBClient:
     def __init__(self) -> None:
-        self.settings = get_settings()
-        self.base_url = self.settings.tmdb_base_url.rstrip("/")
         self._client: httpx.AsyncClient | None = None
+
+    @property
+    def settings(self):
+        return get_settings()
+
+    @property
+    def base_url(self) -> str:
+        return self.settings.tmdb_base_url.rstrip("/")
 
     async def start(self) -> None:
         self._client = httpx.AsyncClient(timeout=20)

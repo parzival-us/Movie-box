@@ -62,7 +62,7 @@ export default function ListsPage() {
   return (
     <main className="page-shell animate-fade">
       <div className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-mint">Collections</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/40">Collections</p>
         <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">Lists</h1>
       </div>
       {error && <div className="mb-6"><ErrorBanner message={error} /></div>}

@@ -20,7 +20,7 @@ export default function MovieCard({ movie, compact = false, action, quickAdd = f
     <article className="group rounded-lg">
       <Link
         to={`/movies/${movie.id}`}
-        className="block overflow-hidden rounded-lg border border-white/10 bg-white/[0.05] transition duration-200 hover:-translate-y-1 hover:border-mint/40 hover:shadow-glow"
+        className="block overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.03] transition duration-200 hover:-translate-y-1 hover:border-white/25 hover:shadow-glow"
       >
         <div className="aspect-[2/3] overflow-hidden bg-panel">
           {poster ? (
@@ -39,14 +39,14 @@ export default function MovieCard({ movie, compact = false, action, quickAdd = f
       </Link>
       <div className="mt-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <Link to={`/movies/${movie.id}`} className="line-clamp-2 text-sm font-semibold text-white hover:text-mint">
+          <Link to={`/movies/${movie.id}`} className="line-clamp-2 text-sm font-semibold text-white hover:text-white/70">
             {movie.title}
           </Link>
           {!compact && (
-            <div className="mt-1 flex items-center gap-2 text-xs text-white/55">
+            <div className="mt-1 flex items-center gap-2 text-xs text-white/40">
               <span>{yearFromDate(movie.release_date)}</span>
               <span className="flex items-center gap-1">
-                <Star size={13} className="fill-ember text-ember" />
+                <Star size={13} className="fill-white/60 text-white/60" />
                 {movie.vote_average ? movie.vote_average.toFixed(1) : "NR"}
               </span>
             </div>

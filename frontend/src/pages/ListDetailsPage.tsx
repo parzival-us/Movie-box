@@ -137,7 +137,7 @@ export default function ListDetailsPage() {
         ) : (
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-mint">List</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/40">List</p>
               <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">{list.name}</h1>
               {list.description && <p className="mt-3 text-base text-white/65">{list.description}</p>}
               <p className="mt-2 text-sm text-white/45">{list.movies.length} movies</p>
