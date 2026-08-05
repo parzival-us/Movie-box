@@ -13,7 +13,10 @@ import MoviePosterFallback from "../components/MoviePosterFallback"
 export default function DiaryPage() {
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [selectedMovie, setSelectedMovie] = useState<MovieSummary | null>(null)
-  const [watchDate, setWatchDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [watchDate, setWatchDate] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  })
   const [rating, setRating] = useState<number | null>(null)
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(true)

@@ -10,11 +10,12 @@ type QuickMovieActionsProps = {
 export default function QuickMovieActions({ movie }: QuickMovieActionsProps) {
   const [watchlisted, setWatchlisted] = useState(false)
   const [favorited, setFavorited] = useState(false)
-  const [pending, setPending] = useState<"watchlist" | "favorite" | null>(null)
+  const [watchlistPending, setWatchlistPending] = useState(false)
+  const [favoritePending, setFavoritePending] = useState(false)
   const [error, setError] = useState("")
 
   async function addToWatchlist() {
-    setPending("watchlist")
+    setWatchlistPending(true)
     setError("")
     try {
       await api.watchlist.add(movie.id)
@@ -22,12 +23,12 @@ export default function QuickMovieActions({ movie }: QuickMovieActionsProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add to watchlist")
     } finally {
-      setPending(null)
+      setWatchlistPending(false)
     }
   }
 
   async function addFavorite() {
-    setPending("favorite")
+    setFavoritePending(true)
     setError("")
     try {
       await api.favorites.add(movie.id)
@@ -35,7 +36,7 @@ export default function QuickMovieActions({ movie }: QuickMovieActionsProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add to favorites")
     } finally {
-      setPending(null)
+      setFavoritePending(false)
     }
   }
 
@@ -46,7 +47,7 @@ export default function QuickMovieActions({ movie }: QuickMovieActionsProps) {
         type="button"
         title={watchlisted ? "Added to watchlist" : "Add to watchlist"}
         aria-label={watchlisted ? "Added to watchlist" : "Add to watchlist"}
-        disabled={pending === "watchlist"}
+        disabled={watchlistPending}
         onClick={addToWatchlist}
       >
         <BookmarkPlus size={14} className={watchlisted ? "text-white" : ""} />
@@ -56,7 +57,7 @@ export default function QuickMovieActions({ movie }: QuickMovieActionsProps) {
         type="button"
         title={favorited ? "Added to favorites" : "Add favorite"}
         aria-label={favorited ? "Added to favorites" : "Add favorite"}
-        disabled={pending === "favorite"}
+        disabled={favoritePending}
         onClick={addFavorite}
       >
         <Heart size={14} className={favorited ? "fill-coral text-coral" : ""} />

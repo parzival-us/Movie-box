@@ -9,7 +9,9 @@ export const formatRuntime = (minutes?: number | null) => {
 
 export const formatDate = (value?: string) => {
   if (!value) return "No date"
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(value))
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return "Invalid date"
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(d)
 }
 
 export const formatHours = (minutes: number) => `${Math.round((minutes / 60) * 10) / 10} hours`

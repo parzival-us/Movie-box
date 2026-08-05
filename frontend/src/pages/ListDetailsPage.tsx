@@ -1,4 +1,4 @@
-import { GripVertical, Pencil, Trash2, X } from "lucide-react"
+import { Pencil, Trash2, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { api } from "../api/client"

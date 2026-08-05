@@ -14,6 +14,11 @@ export default function SearchPage() {
   const [year, setYear] = useState("")
   const [minRating, setMinRating] = useState("")
   const [sortBy, setSortBy] = useState(searchParams.get("sort") ?? "popularity.desc")
+
+  useEffect(() => {
+    const sort = searchParams.get("sort")
+    if (sort) setSortBy(sort)
+  }, [searchParams])
   const [genres, setGenres] = useState<Genre[]>([])
   const [movies, setMovies] = useState<MovieSummary[]>([])
   const [page, setPage] = useState(1)
@@ -61,6 +66,7 @@ export default function SearchPage() {
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || pageRef.current >= totalPagesRef.current) return
     const nextPage = pageRef.current + 1
+    loadingMoreRef.current = true
     setLoadingMore(true)
     api.movies
       .search({ query: debouncedQuery, page: nextPage, year, genre, min_rating: minRating, sort_by: sortBy })

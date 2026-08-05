@@ -37,18 +37,152 @@ select {
   }
 
   .control {
-    @apply rounded-lg border border-white/[0.12] bg-white/[0.06] px-3 py-2 text-sm text-white outline-none transition focus:border-white/40 focus:ring-2 focus:ring-white/10;
+    @apply rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2 text-sm text-white outline-none transition focus:border-white/40 focus:ring-2 focus:ring-white/10;
+    backdrop-filter: blur(12px) saturate(1.4);
   }
 
-  .icon-button {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.05] text-white/70 transition hover:border-white/20 hover:bg-white/[0.1] hover:text-white;
-  }
-
-  .primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
+  /* ── Liquid-glass: shared base ── */
+  .icon-button,
+  .primary-button,
   .secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/[0.12] bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 14px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glossy top-edge highlight */
+  .icon-button::before,
+  .primary-button::before,
+  .secondary-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(
+      168deg,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.06) 38%,
+      transparent 58%
+    );
+    mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    opacity: 0.7;
+    transition: opacity 0.25s ease;
+  }
+
+  .icon-button:hover::before,
+  .primary-button:hover::before,
+  .secondary-button:hover::before {
+    opacity: 1;
+  }
+
+  /* ── Icon button ── */
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center text-white/70;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.12),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.15),
+      0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+  .icon-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: white;
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.18),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+  .icon-button:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow:
+      inset 0 1px 4px rgba(0, 0, 0, 0.2),
+      0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  /* ── Primary button ── */
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold;
+    color: #000;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(240, 240, 240, 0.88) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.6),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.06),
+      0 2px 10px rgba(255, 255, 255, 0.08),
+      0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  .primary-button:hover {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(245, 245, 245, 0.92) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow:
+      inset 0 1px 2px rgba(255, 255, 255, 0.7),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.04),
+      0 4px 24px rgba(255, 255, 255, 0.12),
+      0 6px 30px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
+  }
+  .primary-button:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.1),
+      0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+  .primary-button:disabled {
+    @apply cursor-not-allowed opacity-50;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ── Secondary button ── */
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.1),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.15),
+      0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .secondary-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.16),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.28);
+    transform: translateY(-1px);
+  }
+  .secondary-button:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+      inset 0 1px 4px rgba(0, 0, 0, 0.2),
+      0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+  .secondary-button:disabled {
+    @apply cursor-not-allowed opacity-50;
+    transform: none;
+    box-shadow: none;
   }
 }
